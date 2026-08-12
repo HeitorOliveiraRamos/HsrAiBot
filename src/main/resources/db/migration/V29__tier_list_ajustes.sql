@@ -1,0 +1,14 @@
+-- The author's own answer about who moved, overriding what the diff against their previous list
+-- worked out on its own.
+--
+-- Shape: {"dp": {"novas": [ids], "subiram": [ids], "desceram": [ids]}, "sup": {…}} — keyed by papel,
+-- exactly like `grade`, and holding character_ids for the same reason (see V28).
+--
+-- The KEY's presence is the switch, not its contents. A papel with an entry is drawn from that
+-- entry, even when all three lists are empty; a papel with no entry is drawn from the automatic
+-- diff. That is what lets the two coexist per column: an author can correct Dano Principal by hand
+-- and leave Suporte to work itself out, and it is why this is a separate object instead of a
+-- boolean flag on the row.
+--
+-- Empty by default, so every existing list keeps being fully automatic.
+ALTER TABLE tier_list ADD COLUMN ajustes JSONB NOT NULL DEFAULT '{}'::jsonb;

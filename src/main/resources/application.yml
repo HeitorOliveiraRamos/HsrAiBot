@@ -1,0 +1,227 @@
+spring:
+  application:
+    name: hsr-bot
+  main:
+    web-application-type: none
+  # Timeouts de TODO RestClient da app — na prática, o Ollama. Com o bot no servidor e o Ollama
+  # no Mac, o Mac fica fora do ar boa parte do dia. Mac DESLIGADO devolve "connection refused"
+  # na hora; Mac DORMINDO com o túnel de pé engole os pacotes, e sem connect-timeout cada menção
+  # ficava pendurada até o default da JVM — com max-concurrent-inferences=2, duas menções presas
+  # travam as duas vagas e todo mundo passa a receber a resposta de "ocupada".
+  # connect curto = falha rápido e cai nos fallbacks; read longo porque uma geração de verdade
+  # (carregar modelo + 2048 tokens) leva minutos e NÃO pode ser cortada.
+  http:
+    client:
+      connect-timeout: 3s
+      read-timeout: 300s
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hsrbot
+    username: ${DB_USER:hsrbot}
+    password: ${DB_PASSWORD:hsrbot}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          # Only the OllamaChatModel bean's default: every call site overrides it with
+          # per-prompt options built from RuntimeConfig (voice/brain/vision). Kept in sync
+          # with the voice slot so a misconfigured call still lands on a sane model.
+          model: ${VOICE_MODEL_NAME:gemma4:12b-it-q8_0}
+      # Embedding model for the RAG knowledge base. Pull it once: `ollama pull nomic-embed-text`.
+      # nomic-embed-text outputs 768-dim vectors — this MUST match pgvector.dimensions below.
+      # If you swap to a different embed model (e.g. mxbai-embed-large = 1024), update both.
+      embedding:
+        options:
+          model: ${EMBED_MODEL_NAME:nomic-embed-text}
+          # Safe since Spring AI 1.1.x: keep_alive now serializes as a plain Ollama string
+          # ("30m"). 1.0.0 sent it as an ISO-8601 Duration ("PT30M"), which Ollama's Go
+          # parser rejected with 400 — that is why this line was absent before the upgrade.
+          keep-alive: ${OLLAMA_EMBED_KEEP_ALIVE:30m}
+    vectorstore:
+      pgvector:
+        # Spring AI creates the `vector_store` table + HNSW index on first start.
+        # The `vector` extension itself is created by Flyway (V10__pgvector.sql) beforehand.
+        initialize-schema: true
+        dimensions: ${PGVECTOR_DIMS:768}
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+
+bot:
+  token: ${BOT_TOKEN}
+  personality-file: ${BOT_PERSONALITY_FILE:classpath:prompts/persona.md}
+  # The three model slots default to ONE multimodal model (vision+tools, thinking
+  # disabled per call) so a single runner serves every pass — on a 24GB host that is
+  # the difference between one hot 13GB model and two/three swapping ones. They stay
+  # separate env vars so a split setup (e.g. GAIA voice + qwen brain) is still one
+  # .env change away.
+  # These are only the SEED values: RuntimeConfig follows `.bot.runtime` afterwards, so
+  # `./bot.sh --model` swaps models without a restart and without touching .env.
+  # Brain pass: the constrained classification-shaped calls (intent gate, condenser,
+  # grounding judge, greeting line) and the knowledge retelling.
+  brain-model-name: ${BRAIN_MODEL_NAME:gemma4:12b-it-q8_0}
+  # Voice pass: persona chat replies + the legacy /contexto-do-canal summary.
+  voice-model-name: ${VOICE_MODEL_NAME:gemma4:12b-it-q8_0}
+  # Vision pass: extracts any image attachment's content as text before the normal
+  # pipeline (works for general images, not just HSR — HSR screenshots just get extra
+  # transcription care in the prompt). Needs a vision-capable Ollama model already
+  # pulled. Set VISION_MODEL_NAME= (blank) to disable and ignore images as before.
+  vision-model-name: ${VISION_MODEL_NAME:gemma4:12b-it-q8_0}
+  # Ollama inference tuning. These are applied at every call site by OllamaAiService
+  # because per-prompt OllamaOptions replace Spring AI's chat.options defaults.
+  # num-ctx default (16384) is sized for the knowledge path's web-fetch budget (see
+  # web-fetch-char-limit below); a smaller ctx silently truncates fetched page text and
+  # clips kit numbers. Lower it only if memory-constrained and not using deep web fetches —
+  # larger ctx grows the KV cache.
+  performance:
+    num-ctx: ${OLLAMA_NUM_CTX:16384}
+    # How long Ollama keeps the chat model loaded after a call. The 5m Ollama default
+    # unloads after a quiet spell, so the next mention pays a full model load (10-30s)
+    # before the first token. "-1m" = never unload.
+    keep-alive: ${OLLAMA_KEEP_ALIVE:30m}
+    num-predict: ${OLLAMA_NUM_PREDICT:512}
+    num-thread: ${OLLAMA_NUM_THREAD:8}
+    # Max reply pipelines allowed to hit Ollama concurrently. A single local Ollama
+    # serializes requests, so a burst of mentions otherwise piles up and slows every reply.
+    # When full, extra mentions get an immediate "busy" reply. Raise only if Ollama runs
+    # with real parallelism (OLLAMA_NUM_PARALLEL) and the host has the memory for it.
+    max-concurrent-inferences: ${OLLAMA_MAX_CONCURRENT:2}
+    # Token budget for the knowledge path (HSR brain extraction + persona retelling).
+    # A full kit + its persona rewrite blows past num-predict (512), which is sized for
+    # one-line moderation confirmations. Only a ceiling — short replies still stop early.
+    knowledge-num-predict: ${OLLAMA_KNOWLEDGE_NUM_PREDICT:2048}
+    # Brain pass + intent gate are classification-like: keep sampling tight so the model
+    # doesn't hallucinate tool calls on a greeting.
+    brain-temperature: ${OLLAMA_BRAIN_TEMP:0.1}
+    brain-top-p: ${OLLAMA_BRAIN_TOP_P:0.5}
+    # Voice pass is prose: a bit warmer for natural persona. Drop toward 0.5 if it drifts.
+    voice-temperature: ${OLLAMA_VOICE_TEMP:0.8}
+  reply:
+    cooldown-seconds: 5
+    # Mesma pausa, mas na DM. Maior de propósito: num canal, quem martela o bot está à vista
+    # de todo mundo (e de um moderador); na DM, só este número separa a pessoa do orçamento
+    # de IA da casa inteira.
+    dm-cooldown-seconds: ${DM_COOLDOWN_SECONDS:30}
+    # Reply-chain walker: reconstructs the Discord reply thread leading up to a mention so
+    # the back-and-forth carries context into the LLM prompt without persisting anything.
+    # A fresh @mention has no reply pointer, so it starts clean — separate threads never
+    # mix. Hop 1 is free (inline with the event); deeper hops use an in-memory cache of
+    # BOTH the bot's replies and the human messages she answered, falling back to REST only
+    # on a cold cache (restart). max-hops is high because cache hits are ~free; budget-ms
+    # only bounds the cold-cache REST case; cache-ttl covers long, slow threads.
+    chain:
+      max-hops: ${REPLY_CHAIN_MAX_HOPS:50}
+      budget-ms: ${REPLY_CHAIN_BUDGET_MS:800}
+      cache-ttl-minutes: ${REPLY_CHAIN_CACHE_TTL_MIN:120}
+      cache-max-size: ${REPLY_CHAIN_CACHE_MAX:2000}
+  message:
+    max-length: 2000
+    can-mention-here-and-everyone: false
+  context:
+    history-fetch-size: 50
+  # Allow-list of channel IDs the bot works in — comma-separated, e.g.
+  #   TEST_CHANNEL_IDS=123456789012345678,987654321098765432
+  # When set, both the message listeners AND the slash commands ignore any other GUILD
+  # channel. DMs are never restricted by this. Leave blank/unset to work everywhere.
+  test-channel-ids: ${TEST_CHANNEL_IDS:}
+
+  # Allow-list de SERVIDORES (ids separados por vírgula). Vazio = todos, como sempre foi.
+  # É a cerca externa que test-channel-ids não é: os comandos de barra são registrados
+  # GLOBALMENTE, então sem isto qualquer link de convite aponta todo o custo de render, de
+  # Enka e de Ollama pra esta máquina. Um convite pra servidor fora da lista é desfeito na
+  # hora (GuildGuard sai); servidores em que o bot JÁ estava só viram aviso no log.
+  guild-ids: ${GUILD_IDS:}
+
+  # Se o bot responde no privado. A DM escapa de test-channel-ids por construção (não tem
+  # servidor pra escopar) e ninguém além de quem mandou enxerga, então é o único caminho onde
+  # dá pra gastar a IA da casa sem ninguém ver. false fecha o privado por completo.
+  dm-enabled: ${DM_ENABLED:true}
+
+  # Honkai: Star Rail knowledge base (RAG). Feeds the lookupHsr / searchWeb tools.
+  knowledge:
+    # When true, the ingestion runner wipes `vector_store` and re-embeds everything from
+    # nanoka on startup, then the bot continues normally. Leave false in production — flip it
+    # on for a single run after a new patch:
+    #   HSR_REINDEX=true java -jar hsr-bot.jar    (or mvn spring-boot:run)
+    reindex: ${HSR_REINDEX:false}
+    # When the daily freshness check sees nanoka serving a NEWER data version than the one
+    # indexed, reindex automatically instead of just warning. Load-before-truncate: a broken
+    # fetch never wipes a working KB. Disable to go back to warn-only + manual HSR_REINDEX.
+    auto-reindex: ${HSR_AUTO_REINDEX:true}
+    # Cache final knowledge answers by normalized question — a repeat /hsr or mention
+    # question answers instantly with zero LLM calls. Cleared on reindex; web-sourced
+    # entries also expire after 24h. Answers carrying the asker's name are never cached.
+    answer-cache: ${HSR_ANSWER_CACHE:true}
+    # nanoka.cc data source for the reindex (structured JSON, no scraping). The patch version
+    # is auto-discovered from the home page; pin it via HSR_NANOKA_VERSION to freeze a patch.
+    nanoka-home-url: ${HSR_NANOKA_HOME:https://hsr.nanoka.cc/}
+    nanoka-cdn-url: ${HSR_NANOKA_CDN:https://static.nanoka.cc/hsr}
+    nanoka-version: ${HSR_NANOKA_VERSION:}
+    # Artwork for beta characters srs has not published yet. Version-free paths, so no pin needed.
+    nanoka-asset-url: ${HSR_NANOKA_ASSETS:https://static.nanoka.cc/assets/hsr}
+    # How many documents to embed+insert per batch during ingestion. Lower if Ollama
+    # times out on big batches; raise to go faster.
+    batch-size: ${HSR_INGEST_BATCH:64}
+    # How many knowledge chunks lookupHsr returns to the brain pass per query.
+    top-k: ${HSR_TOP_K:5}
+    # Minimum cosine similarity (0..1) for a chunk to be considered relevant. Below this,
+    # lookupHsr reports "nothing found" so the brain can fall back to searchWeb.
+    similarity-threshold: ${HSR_SIM_THRESHOLD:0.55}
+    # Self-hosted SearXNG JSON endpoint for the web-search fallback. Set to empty to disable
+    # web search (lookupHsr still works). Web search is half the anti-hallucination net —
+    # when a character isn't in the local base, this is the only thing that grounds the answer.
+    searxng-url: ${SEARXNG_URL:http://localhost:8888}
+    # How many of the top web results to open and read in full (page text), not just the
+    # short SearXNG snippet — this is what makes leaked/older kits actually answerable.
+    # 0 = snippets only. Kept low (2): better to read few pages deeply than many shallowly
+    # (wiki pages bury the kit ~14k chars in); snippets still return for ALL results.
+    web-fetch-pages: ${HSR_WEB_FETCH_PAGES:2}
+    # Per-page character cap on extracted text fed to the model (bounds the context window).
+    # Large on purpose — on game8-style pages the ability multipliers don't appear until
+    # ~14–16k chars in, after the table-of-contents/ratings preamble. Lower if num-ctx is small.
+    web-fetch-char-limit: ${HSR_WEB_FETCH_CHARS:18000}
+    # /build showcase sources, tried in the order set by showcase-source ("enka" or "mihomo");
+    # whichever isn't first is the fallback. Enka leads: both proxy the same HoYo endpoint, but
+    # Enka caches and mihomo 5xxs when the upstream hiccups. Enka returns the RAW payload (ids,
+    # no computed stat panel) and is localized through star-rail-res-base below; mihomo returns
+    # names and the finished stat panel, so a fallback card carries an EXTRA block, not fewer.
+    # Put a real contact in the user agent — Enka throttles anonymous integrators harder.
+    showcase-source: ${HSR_SHOWCASE_SOURCE:enka}
+    enka-url: ${HSR_ENKA_URL:https://enka.network/api/hsr/uid}
+    enka-user-agent: ${HSR_ENKA_UA:hsr-bot/2.0 (discord; defina HSR_ENKA_UA com seu contato)}
+    mihomo-url: ${HSR_MIHOMO_URL:https://api.mihomo.me/sr_info_parsed}
+    # hsr_character cache sources (names en/pt/es + fribbels build metadata), harvested in
+    # background every ~30 days: StarRailRes index (same ids as mihomo) and the
+    # fribbels/hsr-optimizer repo (tree listing via GitHub API + raw file fetches).
+    # The fribbels harvest is ALSO the /build scorer's only ruler — FribbelsScorer reads its
+    # per-character weights straight off these configs, which is what makes our percentages
+    # equal to the ones hsr.fribbels.com prints for the same UID.
+    # StarRailRes also serves the pt/ name tables EnkaClient needs to turn Enka's ids into the
+    # same PT strings mihomo used to return — see StarRailResNames.
+    star-rail-res-base: ${HSR_STARRAILRES_BASE:https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/index_min/}
+    fribbels-tree-url: ${HSR_FRIBBELS_TREE_URL:https://api.github.com/repos/fribbels/hsr-optimizer/git/trees/main?recursive=1}
+    fribbels-raw-base: ${HSR_FRIBBELS_RAW_BASE:https://raw.githubusercontent.com/fribbels/hsr-optimizer/main/}
+    # Verify web-sourced HSR answers against the fetched page text with a cheap LLM judge
+    # before sending (one short round-trip per web answer; local-KB answers skip it). Set
+    # false to drop the judge if web replies feel slow and you trust deterministic grounding.
+    verify-web-answers: ${HSR_VERIFY_WEB:true}
+
+logging:
+  level:
+    root: INFO
+    # DEBUG aqui imprime o conteúdo das mensagens dos usuários. Isso era o certo enquanto o
+    # bot rodava na máquina do dono e falava com o servidor dele; num host 24/7 vira registro
+    # de conversa alheia num arquivo que ninguém lê, e vira disco cheio — o MESMO disco do
+    # Postgres e dos backups. INFO por padrão, LOG_LEVEL=DEBUG quando estiver caçando bug.
+    com.hsrbot: ${LOG_LEVEL:INFO}
+    net.dv8tion.jda: INFO

@@ -1,0 +1,142 @@
+{
+ "110251": {
+  "item_name": "Bīja of Consciousness",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "NotNormal",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110251.png"
+ },
+ "110252": {
+  "item_name": "Seedling of Manas",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110252.png"
+ },
+ "110253": {
+  "item_name": "Flower of Ālaya",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110253.png"
+ },
+ "110261": {
+  "item_name": "<i>The Fluffy</i> Hand-drawn Storyboards",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "NotNormal",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110261.png"
+ },
+ "110262": {
+  "item_name": "<i>The Fluffy</i> Serialization Memorial Issue",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110262.png"
+ },
+ "110263": {
+  "item_name": "<i>The Fluffy</i> Collector's Edition",
+  "item_sub_type": "TracePath",
+  "purpose_type": 3,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110263.png"
+ },
+ "110435": {
+  "item_name": "Charred Bud of Twilight",
+  "item_sub_type": "AvatarRank",
+  "purpose_type": 2,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110435.png"
+ },
+ "110443": {
+  "item_name": "Sneering Harlequin",
+  "item_sub_type": "AvatarRank",
+  "purpose_type": 2,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110443.png"
+ },
+ "110509": {
+  "item_name": "...",
+  "item_sub_type": "WeeklyMonsterDrop",
+  "purpose_type": 4,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/110509.png"
+ },
+ "114001": {
+  "item_name": "Dream Collection Component",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "NotNormal",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114001.png"
+ },
+ "114002": {
+  "item_name": "Dream Flow Valve",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114002.png"
+ },
+ "114003": {
+  "item_name": "Dream Making Engine",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114003.png"
+ },
+ "114011": {
+  "item_name": "Tatters of Thought",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "NotNormal",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114011.png"
+ },
+ "114012": {
+  "item_name": "Fragments of Impression",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114012.png"
+ },
+ "114013": {
+  "item_name": "Shards of Desires",
+  "item_sub_type": "CommonMonsterDrop",
+  "purpose_type": 7,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/114013.png"
+ },
+ "2": {
+  "item_name": "Credit",
+  "item_sub_type": "Virtual",
+  "purpose_type": 11,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/2.png"
+ },
+ "211": {
+  "item_name": "Travel Encounters",
+  "item_sub_type": "AvatarExp",
+  "purpose_type": 1,
+  "rarity": "NotNormal",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/211.png"
+ },
+ "212": {
+  "item_name": "Adventure Log",
+  "item_sub_type": "AvatarExp",
+  "purpose_type": 1,
+  "rarity": "Rare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/212.png"
+ },
+ "213": {
+  "item_name": "Traveler's Guide",
+  "item_sub_type": "AvatarExp",
+  "purpose_type": 1,
+  "rarity": "VeryRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/213.png"
+ },
+ "241": {
+  "item_name": "Tracks of Destiny",
+  "item_sub_type": "WeeklyMonsterDrop",
+  "purpose_type": 4,
+  "rarity": "SuperRare",
+  "item_figure_icon_path": "SpriteOutput/ItemFigures/241.png"
+ }
+}

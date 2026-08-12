@@ -1,0 +1,161 @@
+{
+  "detailInfo": {
+    "uid": 600281322,
+    "nickname": "tore",
+    "level": 70,
+    "worldLevel": 6,
+    "friendCount": 93,
+    "headIcon": 200159,
+    "signature": "Servidor BR",
+    "isDisplayAvatar": true,
+    "platform": "PC",
+    "recordInfo": { "achievementCount": 700, "avatarCount": 60, "relicCount": 1200 },
+    "avatarDetailList": [
+      {
+        "avatarId": 1407,
+        "rank": 2,
+        "level": 80,
+        "promotion": 6,
+        "_assist": true,
+        "equipment": {
+          "tid": 23037,
+          "rank": 1,
+          "level": 80,
+          "promotion": 6,
+          "_flat": {
+            "props": [
+              { "type": "BaseHP", "value": 1164.24 },
+              { "type": "BaseAttack", "value": 582.12 },
+              { "type": "BaseDefence", "value": 463.05 }
+            ],
+            "name": 3462705490
+          }
+        },
+        "skillTreeList": [
+          { "pointId": 1407001, "level": 6 },
+          { "pointId": 1407002, "level": 10 }
+        ],
+        "relicList": [
+          {
+            "level": 15,
+            "mainAffixId": 1,
+            "type": 1,
+            "tid": 61011,
+            "_flat": {
+              "props": [
+                { "type": "HPDelta", "value": 705.6 },
+                { "type": "CriticalDamage", "value": 0.2268 },
+                { "type": "SpeedDelta", "value": 4.0 },
+                { "type": "AttackAddedRatio", "value": 0.0864 }
+              ],
+              "setID": 118,
+              "setName": 3006240686
+            },
+            "subAffixList": [
+              { "affixId": 6, "cnt": 5, "step": 5 },
+              { "affixId": 9, "cnt": 2, "step": 1 },
+              { "affixId": 4, "cnt": 1 }
+            ]
+          },
+          {
+            "level": 15,
+            "mainAffixId": 1,
+            "type": 2,
+            "tid": 61012,
+            "_flat": {
+              "props": [
+                { "type": "AttackDelta", "value": 352.8 },
+                { "type": "CriticalChance", "value": 0.0648 }
+              ],
+              "setID": 118,
+              "setName": 3006240686
+            },
+            "subAffixList": [{ "affixId": 5, "cnt": 3, "step": 2 }]
+          },
+          {
+            "level": 12,
+            "mainAffixId": 5,
+            "type": 3,
+            "tid": 61013,
+            "_flat": {
+              "props": [
+                { "type": "CriticalChanceBase", "value": 0.2916 },
+                { "type": "HPDelta", "value": 84.0 }
+              ],
+              "setID": 118,
+              "setName": 3006240686
+            },
+            "subAffixList": [{ "affixId": 2, "cnt": 2, "step": 0 }]
+          },
+          {
+            "level": 15,
+            "mainAffixId": 4,
+            "type": 4,
+            "tid": 61014,
+            "_flat": {
+              "props": [
+                { "type": "SpeedDelta", "value": 25.032 },
+                { "type": "CriticalDamage", "value": 0.1296 }
+              ],
+              "setID": 118,
+              "setName": 3006240686
+            },
+            "subAffixList": [{ "affixId": 6, "cnt": 3, "step": 3 }]
+          },
+          {
+            "level": 15,
+            "mainAffixId": 9,
+            "type": 5,
+            "tid": 63015,
+            "_flat": {
+              "props": [
+                { "type": "QuantumAddedRatio", "value": 0.3888 },
+                { "type": "CriticalChance", "value": 0.0324 }
+              ],
+              "setID": 310,
+              "setName": 3543138958
+            },
+            "subAffixList": [{ "affixId": 5, "cnt": 1, "step": 2 }]
+          },
+          {
+            "level": 15,
+            "mainAffixId": 3,
+            "type": 6,
+            "tid": 63016,
+            "_flat": {
+              "props": [
+                { "type": "HPAddedRatio", "value": 0.432 },
+                { "type": "CriticalDamage", "value": 0.0583 }
+              ],
+              "setID": 310,
+              "setName": 3543138958
+            },
+            "subAffixList": [{ "affixId": 6, "cnt": 1, "step": 4 }]
+          }
+        ]
+      },
+      {
+        "avatarId": 1409,
+        "rank": 0,
+        "level": 70,
+        "promotion": 5,
+        "relicList": [
+          {
+            "level": 9,
+            "mainAffixId": 1,
+            "type": 1,
+            "tid": 61011,
+            "_flat": {
+              "props": [{ "type": "HPDelta", "value": 470.0 }],
+              "setID": 118,
+              "setName": 3006240686
+            },
+            "subAffixList": []
+          }
+        ]
+      }
+    ]
+  },
+  "ttl": 60,
+  "uid": "600281322"
+}

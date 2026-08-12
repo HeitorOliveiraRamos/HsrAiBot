@@ -1,0 +1,48 @@
+# Compiled class file
+.idea
+/target/
+.DS_Store
+
+# Saída dos mains de prévia (CardPreviewStandalone / AscensaoPreviewStandalone /
+# AvaliacaoPreviewStandalone): eles escrevem o PNG na raiz do repo, então sem isto
+# cada rodada de ajuste de card oferece um megabyte de imagem pra commitar.
+/*-preview-*.png
+
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+replay_pid*
+
+# Local secrets
+.env
+.env.local
+logs/
+.bot.pid
+.bot.activity
+.bot.runtime
+# Marca do heartbeat: registra que foi ELE quem desligou a IA, pra não religar por cima
+# de um /ia desligar feito por uma pessoa. É estado da máquina, não do projeto.
+.bot.ia-caiu
+
+# Dumps do ./bot.sh backup — ~30 MB cada e contêm dados de membros (guia_arte).
+# Nunca versionar: o *.tar.gz acima não pega .sql.gz.
+backups/

@@ -1,0 +1,30 @@
+-- Régua do `/build` editável à mão. A coluna `fribbels` é colhida do repositório do fribbels a cada
+-- ~30 dias (regex em cima de TypeScript, FribbelsHarvester) e é SOBRESCRITA inteira toda colheita —
+-- então corrigir um peso ali dura até a próxima. `ajuste` nunca é tocado pela colheita: o
+-- HsrCharacterService funde os dois na leitura, campo a campo, com `ajuste` ganhando.
+--
+-- A fusão é PROFUNDA nos objetos e substituta nas listas, então o patch só precisa citar o que muda:
+--
+--   -- Só a Velocidade da Acheron, o resto da régua continua sendo a do fribbels:
+--   UPDATE hsr_build_meta SET ajuste = '{"subWeights": {"SpeedDelta": 0.5}}' WHERE id = '1308';
+--
+--   -- Só o main das botas (slot 4); os slots 3, 5 e 6 seguem intactos:
+--   UPDATE hsr_build_meta SET ajuste = '{"mainStats": {"4": ["SpeedDelta"]}}' WHERE id = '1308';
+--
+--   -- Listas trocam inteiras (relicSets, ornamentSets, substatPriority, breakpoints):
+--   UPDATE hsr_build_meta SET ajuste = '{"ornamentSets": ["Rutilante Arena"]}' WHERE id = '1308';
+--
+--   -- Personagem que o fribbels ainda não tem config: linha nova com fribbels vazio.
+--   INSERT INTO hsr_build_meta (id, fribbels, ajuste)
+--   VALUES ('1234', '{}', '{"subWeights": {"CriticalChanceBase": 1}}');
+--
+--   -- Voltar pro que o fribbels diz:
+--   UPDATE hsr_build_meta SET ajuste = NULL WHERE id = '1308';
+--
+-- Chaves = as do JSON de FribbelsMeta.toJson, valores = as property keys do jogo
+-- ("CriticalDamageBase", "SpeedDelta"), as mesmas que mihomo e Enka já falam. Chave escrita errada
+-- não quebra nada e também não faz nada — o log de carga lista quem tem ajuste, confira lá.
+--
+-- Cuidado com patch completo: se o fribbels publicar uma config melhor depois, o ajuste continua
+-- ganhando. Ajuste largo é pra quem não tem config; pra discordar de um número, patch de um campo.
+ALTER TABLE hsr_build_meta ADD COLUMN ajuste JSONB;
